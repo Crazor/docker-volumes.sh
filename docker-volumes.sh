@@ -68,7 +68,7 @@ if [[ $# -ne 3 || ! $2 =~ ^(save|load)$ ]] ; then
 fi
 
 get_volumes () {
-	$DOCKER inspect --type container -f "$FILTER" "$CONTAINER" | head -c -1 | sort -uz
+	$DOCKER inspect --type container -f "$FILTER" "$CONTAINER" | ghead -c -1 | sort -uz
 }
 
 save_volumes () {
@@ -79,7 +79,7 @@ save_volumes () {
 	umask 077
 	# Create a void tar file to avoid mounting its directory as a volume
 	touch -- "$TAR_FILE"
-	tmp_dir=$(mktemp -du -p /)
+	tmp_dir=$(gmktemp -du -p /)
 	get_volumes | $DOCKER run --rm -i --volumes-from "$CONTAINER" -e LC_ALL=C.UTF-8 -v "$TAR_FILE:/${tmp_dir}/${TAR_FILE##*/}" "$IMAGE" tar -c -a $verbose --null -T- -f "/${tmp_dir}/${TAR_FILE##*/}"
 }
 
@@ -88,12 +88,12 @@ load_volumes () {
 		echo "ERROR: $TAR_FILE doesn't exist in the current directory" >&2
 		exit 1
 	fi
-	tmp_dir=$(mktemp -du -p /)
+	tmp_dir=$(gmktemp -du -p /)
 	$DOCKER run --rm --volumes-from "$CONTAINER" -e LC_ALL=C.UTF-8 -v "$TAR_FILE:/${tmp_dir}/${TAR_FILE##*/}":ro "$IMAGE" tar -xp $verbose -S -f "/${tmp_dir}/${TAR_FILE##*/}" -C / --overwrite
 }
 
 CONTAINER="$1"
-TAR_FILE=$(readlink -f "$3")
+TAR_FILE=$(greadlink -f "$3")
 
 set -e
 
